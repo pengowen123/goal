@@ -90,18 +90,8 @@ fn parse_goal(text: &str) -> Option<Goal> {
 
     match (text.is_empty(), deadline.is_empty()) {
         (true, true) => None,
-        (false, true) => {
-            Some(Goal {
-                text: text,
-                deadline: None,
-            })
-        }
-        _ => {
-            Some(Goal {
-                text: text,
-                deadline: Some(deadline),
-            })
-        }
+        (false, true) => Some(Goal::new(text, None)),
+        _ => Some(Goal::new(text, Some(deadline))),
     }
 }
 
@@ -156,8 +146,11 @@ struct Goal {
 }
 
 impl Goal {
-    pub fn new() -> i32 {
-        0
+    pub fn new(goal: String, deadline: Option<String>) -> Goal {
+        Goal {
+            text: goal,
+            deadline: deadline,
+        }
     }
 }
 

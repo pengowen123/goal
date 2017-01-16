@@ -4,7 +4,7 @@ name = "goal"
 version = "1.0.0"
 
 [dependencies]
-toml = "0.2"
-clap = "2.18.0"
 app_dirs = "1.1.1"
+clap = "2.18.0"
 inner = "0.1.1"
+toml = "0.2"
