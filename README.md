@@ -7,6 +7,11 @@ Running `goal set <message>` will set the note. A deadline can also be specified
 `goal edit`. The default editor is taken from `$EDITOR`, but it can be overridden with `goal edit -e
 <editor>`.
 
+# Installation
+
+If you have Cargo installed (get it from [here][0]), you can run:
+`cargo install goal`
+
 # License
 
 Licensed under either of
