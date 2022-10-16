@@ -1,17 +1,17 @@
-extern crate toml;
-extern crate clap;
 extern crate app_dirs;
+extern crate clap;
+extern crate toml;
 #[macro_use]
 extern crate inner;
-extern crate tempdir;
 extern crate open;
+extern crate tempdir;
 
-use toml::Value;
-use clap::{Parser, Subcommand, crate_version};
-use app_dirs::{AppInfo, AppDataType};
-use std::io::{self, Write, Read};
+use app_dirs::{AppDataType, AppInfo};
+use clap::{crate_version, Parser, Subcommand};
 use std::fs::{File, OpenOptions};
-use std::{process, env};
+use std::io::{self, Read, Write};
+use std::{env, process};
+use toml::Value;
 
 const NAME: &'static str = "goal";
 const APP_INFO: AppInfo = AppInfo {
@@ -31,28 +31,28 @@ macro_rules! error {
     ($error:expr) => {{
         println!("{}:{} in {}:\n{}", file!(), line!(), module_path!(), $error);
         process::exit(1);
-    }}
+    }};
 }
 
 macro_rules! base_goal_file {
     () => {
-"[goal]
+        "[goal]
 text = {}
 deadline = {}\n"
-    }
+    };
 }
 
 macro_rules! empty_string {
     () => {{
         // 6 quotes; a multiline string in TOML
         r#""""""""#
-    }}
+    }};
 }
 
 macro_rules! multiline_string {
     ($e:expr) => {{
         format!(r#""""{}""""#, $e)
-    }}
+    }};
 }
 
 fn open_goal_file() -> io::Result<File> {
@@ -63,44 +63,35 @@ fn open_goal_file() -> io::Result<File> {
 
     if !path.exists() {
         let mut file = File::create(path.clone())?;
-        file.write_all(
-            format!(
-                base_goal_file!(),
-                empty_string!(),
-                empty_string!()
-            ).as_bytes(),
-        )?;
+        file.write_all(format!(base_goal_file!(), empty_string!(), empty_string!()).as_bytes())?;
     }
 
     OpenOptions::new().write(true).read(true).open(path)
 }
 
 fn parse_goal(text: &str) -> Option<Goal> {
-    let parsed: toml::Value = toml::from_str(text).expect(
-        "Goal file was invalid: failed to parse",
-    );
+    let parsed: toml::Value = toml::from_str(text).expect("Goal file was invalid: failed to parse");
 
     let goal = inner!(
-        parsed.get(&GOAL_KEY.to_string())
-            .expect("Goal file was invalid: failed to get goal value").clone(),
-        if Value::Table, else {
-            panic!("Goal file was invalid: goal value was not a table");
-        });
+    parsed.get(&GOAL_KEY.to_string())
+        .expect("Goal file was invalid: failed to get goal value").clone(),
+    if Value::Table, else {
+        panic!("Goal file was invalid: goal value was not a table");
+    });
 
     let text = inner!(
-        goal.get(&GOAL_TEXT_KEY.to_string())
-            .expect("Goal file was invalid: failed to get goal text").clone(),
-        if Value::String, else {
-            panic!("Goal file was invalid: text value was not a string");
-        });
-
+    goal.get(&GOAL_TEXT_KEY.to_string())
+        .expect("Goal file was invalid: failed to get goal text").clone(),
+    if Value::String, else {
+        panic!("Goal file was invalid: text value was not a string");
+    });
 
     let deadline = inner!(
-        goal.get(&GOAL_DEADLINE_KEY.to_string())
-            .expect("Goal file was invalid: failed to get goal deadline").clone(),
-        if Value::String, else {
-            panic!("Goal file was invalid: deadline value was not a string");
-        });
+    goal.get(&GOAL_DEADLINE_KEY.to_string())
+        .expect("Goal file was invalid: failed to get goal deadline").clone(),
+    if Value::String, else {
+        panic!("Goal file was invalid: deadline value was not a string");
+    });
 
     match (text.is_empty(), deadline.is_empty()) {
         (true, true) => None,
@@ -123,18 +114,12 @@ fn set_goal(new_goal: &str, deadline: Option<String>) -> io::Result<()> {
 
     goal_file.set_len(0)?;
 
-    let deadline = deadline.map(|d| multiline_string!(d)).unwrap_or(
-        empty_string!()
-            .to_string(),
-    );
+    let deadline = deadline
+        .map(|d| multiline_string!(d))
+        .unwrap_or(empty_string!().to_string());
 
-    goal_file.write_all(
-        format!(
-            base_goal_file!(),
-            multiline_string!(new_goal),
-            deadline
-        ).as_bytes(),
-    )?;
+    goal_file
+        .write_all(format!(base_goal_file!(), multiline_string!(new_goal), deadline).as_bytes())?;
 
     println!("Goal set.");
 
@@ -148,10 +133,9 @@ fn edit_goal(editor: Option<String>, new_deadline: Option<String>) -> io::Result
 
     // Get current goal (and the deadline for later)
     let current_goal = get_goal()?;
-    let (goal, deadline) = current_goal.map(|g| (g.text, g.deadline)).unwrap_or((
-        String::new(),
-        None,
-    ));
+    let (goal, deadline) = current_goal
+        .map(|g| (g.text, g.deadline))
+        .unwrap_or((String::new(), None));
 
     // Write the current goal to the temp file, will be displayed on editor start
     writeln!(tmp_file, "{}", goal)?;
@@ -192,9 +176,7 @@ fn remove_goal() -> io::Result<()> {
     let mut goal_file = open_goal_file()?;
 
     goal_file.set_len(0)?;
-    goal_file.write_all(
-        format!(base_goal_file!(), empty_string!(), empty_string!()).as_bytes(),
-    )
+    goal_file.write_all(format!(base_goal_file!(), empty_string!(), empty_string!()).as_bytes())
 }
 
 fn show_current_goal() -> io::Result<()> {
@@ -220,10 +202,7 @@ struct Goal {
 
 impl Goal {
     fn new(text: String, deadline: Option<String>) -> Goal {
-        Goal {
-            text,
-            deadline,
-        }
+        Goal { text, deadline }
     }
 }
 
@@ -271,5 +250,6 @@ fn main() {
         Commands::Set { new_goal, deadline } => set_goal(&new_goal, deadline),
         Commands::Edit { editor, deadline } => edit_goal(editor, deadline),
         Commands::Remove => remove_goal(),
-    }.unwrap_or_else(|e| error!(e));
+    }
+    .unwrap_or_else(|e| error!(e));
 }
